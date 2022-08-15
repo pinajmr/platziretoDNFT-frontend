@@ -12,6 +12,7 @@ export default function Home() {
   const [hasMetamask, setHasMetamask] = useState(false);
   const [signer, setSigner] = useState(undefined);
   const [isDeployed, setIsDeployed] = useState(false);
+  const [isMint, setIsMint] = useState(false);
 
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -34,7 +35,7 @@ export default function Home() {
     }
   }
 
-  async function execute() {
+  async function deploy() {
     if (typeof window.ethereum !== "undefined") {
       const contractFactory = new ethers.ContractFactory(abi, binary, signer);
       console.log("Deploying ... please wait....");
@@ -61,6 +62,29 @@ export default function Home() {
     }
   }
 
+  async function mint() {
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+    try {
+      let transaction = await contract.safeMint();
+      await transaction.wait(1);
+      nft = await contract.tokenURI(0);
+      console.log(`Your NFT is : ${nft}`);
+      setIsMint(true);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function tokenUri() {
+    const contract = new ethers.Contract(contractAddress, abi, signer);
+    try {
+      let NFT = await contract.tokenURI(0);
+      console.log(`Your NFT is : ${NFT}`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <div>
       {hasMetamask ? (
@@ -70,14 +94,28 @@ export default function Home() {
           <button onClick={() => connect()}>Connect!</button>
         )
       ) : (
-        "Please install metamask"
+        "Please install metamask!"
       )}
 
-      {isConnected ? <button onClick={() => execute()}> Execute</button> : " "}
+      {isConnected ? (
+        <button onClick={() => deploy()}> Deploy Contract</button>
+      ) : (
+        " "
+      )}
       {isConnected && isDeployed ? (
         <button onClick={() => name()}> Get Name</button>
       ) : (
-        " "
+        ""
+      )}
+      {isConnected && isDeployed ? (
+        <button onClick={() => mint()}> Get you NFT</button>
+      ) : (
+        ""
+      )}
+      {isConnected && isDeployed && isMint ? (
+        <button onClick={() => tokenUri()}> tokenURI</button>
+      ) : (
+        ""
       )}
     </div>
   );
